@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #game-container {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+            background-color: #0074d9;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            box-shadow: inset 0 0 5px #aaa;
+            cursor: pointer;
+        }
+
+        .player1 {
+            background-color: red;
+        }
+
+        .player2 {
+            background-color: yellow;
+        }
+
+        #reset-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0074d9;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #reset-button:hover {
+            background-color: #005bb5;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1 style=color:darkgreen>Connect Four</h1>
+    <div id="game-container">
+        <div id="grid"></div>
+        <button id="reset-button">Reset Game</button>
+    </div>
+    <p id="status">Player 1's turn (Red)</p>
+    <script>
+        const grid = document.getElementById('grid');
+        const status = document.getElementById('status');
+        const resetButton = document.getElementById('reset-button');
+
+        const ROWS = 6;
+        const COLUMNS = 7;
+        let currentPlayer = 1;
+        let gameBoard = Array.from({ length: ROWS }, () => Array(COLUMNS).fill(0));
+
+        // Create the grid dynamically
+        function createGrid() {
+            grid.innerHTML = '';
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLUMNS; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Check for a winner
+        function checkWinner(player) {
+            // Check horizontal, vertical, and diagonal directions
+            const directions = [
+                { dr: 0, dc: 1 }, // Horizontal
+                { dr: 1, dc: 0 }, // Vertical
+                { dr: 1, dc: 1 }, // Diagonal (down-right)
+                { dr: 1, dc: -1 } // Diagonal (down-left)
+            ];
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLUMNS; col++) {
+                    if (gameBoard[row][col] === player) {
+                        for (const { dr, dc } of directions) {
+                            let count = 1;
+                            for (let step = 1; step < 4; step++) {
+                                const r = row + dr * step;
+                                const c = col + dc * step;
+                                if (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && gameBoard[r][c] === player) {
+                                    count++;
+                                } else {
+                                    break;
+                                }
+                            }
+                            if (count === 4) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Handle cell click
+        function handleCellClick(e) {
+            const col = parseInt(e.target.dataset.col);
+            // Find the lowest empty row in the selected column
+            for (let row = ROWS - 1; row >= 0; row--) {
+                if (gameBoard[row][col] === 0) {
+                    gameBoard[row][col] = currentPlayer;
+                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add(currentPlayer === 1 ? 'player1' : 'player2');
+                    if (checkWinner(currentPlayer)) {
+                        status.textContent = `Player ${currentPlayer} wins!`;
+                        grid.removeEventListener('click', handleCellClick);
+                        return;
+                    }
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    status.textContent = `Player ${currentPlayer}'s turn (${currentPlayer === 1 ? 'Red' : 'Yellow'})`;
+                    return;
+                }
+            }
+            alert('Column is full!');
+        }
+
+        // Reset the game
+        function resetGame() {
+            gameBoard = Array.from({ length: ROWS }, () => Array(COLUMNS).fill(0));
+            currentPlayer = 1;
+            status.textContent = "Player 1's turn (Red)";
+            createGrid();
+            grid.addEventListener('click', handleCellClick);
+        }
+
+        // Initialize the game
+        createGrid();
+        grid.addEventListener('click', handleCellClick);
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
